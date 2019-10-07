@@ -4,9 +4,9 @@
 [![Coverage Status](http://img.shields.io/coveralls/flask-restful/flask-restful/master.svg)](https://coveralls.io/r/flask-restful/flask-restful)
 [![PyPI Version](http://img.shields.io/pypi/v/Flask-RESTful.svg)](https://pypi.python.org/pypi/Flask-RESTful)
 
-Flask-RESTful provides the building blocks for creating a great REST API.
+Flask-RESTful 提供了建立很棒的 REST API 组块。
 
-## User Guide
+## 用户指导
 
-You'll find the user guide and all documentation [here](https://flask-restful.readthedocs.io/)
+你会在本仓库中找到用户指导和所有文档内容。英文版内容在 [这里](https://flask-restful.readthedocs.io/)
 
