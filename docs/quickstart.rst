@@ -1,19 +1,20 @@
 .. _quickstart:
 
-Quickstart
+快速开始
 ==========
 
 .. currentmodule:: flask_restful
 
-It's time to write your first REST API. This guide assumes you have a working
-understanding of `Flask <http://flask.pocoo.org>`_, and that you have already
-installed both Flask and Flask-RESTful.  If not, then follow the steps in the
-:ref:`installation` section.
+是时候写你的第一个 REST API 网络应用了。
+本指导文档都是建立在你已经理解并与
+ `Flask <http://flask.pocoo.org>`_ 工作一段时间的基础上，
+并且你已经安装完 Flask 和 Flask-RESTful。
+如果还没有的话，阅读 :ref:`installation` 安装文档内容。
 
-A Minimal API
+一个迷你 API
 -------------
 
-A minimal Flask-RESTful API looks like this: ::
+迷你型 Flask-RESTful API 看起来就像下面代码所实现的一样： ::
 
     from flask import Flask
     from flask_restful import Resource, Api
@@ -30,9 +31,10 @@ A minimal Flask-RESTful API looks like this: ::
     if __name__ == '__main__':
         app.run(debug=True)
 
-Save this as api.py and run it using your Python interpreter. Note that we've
-enabled `Flask debugging <http://flask.pocoo.org/docs/quickstart/#debug-mode>`_
-mode to provide code reloading and better error messages. ::
+把这些代码保存到 `api.py` 文件里，然后在终端里用 Python 解释器来运行这个文件。 
+注意：我们已经打开了调试模式
+ `Flask debugging <http://flask.pocoo.org/docs/quickstart/#debug-mode>`_
+这样提供了代码动态更新功能和更好的错误消息显示功能。 ::
 
     $ python api.py
      * Running on http://127.0.0.1:5000/
@@ -40,20 +42,22 @@ mode to provide code reloading and better error messages. ::
 
 .. warning::
 
-    Debug mode should never be used in a production environment!
+    调试模式永远不要用在生产服务器上！
 
-Now open up a new prompt to test out your API using curl ::
+现在打开一个新的终端来测试 API 效果，是用 `curl` 命令： ::
 
     $ curl http://127.0.0.1:5000/
     {"hello": "world"}
 
-Resourceful Routing
+资源路由
 -------------------
-The main building block provided by Flask-RESTful are resources. Resources are
-built on top of `Flask pluggable views <http://flask.pocoo.org/docs/views/>`_,
-giving you easy access to multiple HTTP methods just by defining methods on
-your resource. A basic CRUD resource for a todo application (of course) looks
-like this: ::
+Flask-RESTful 提供的主体建筑块都是一些资源。
+这些资源都建立在 `Flask pluggable views <http://flask.pocoo.org/docs/views/>`_
+的顶部，这样你就可以使用多种 HTTP 方法来容易访问这些资源，
+HTTP 方法是要定义在每一个资源上的，也就是通过写代码来实现。
+一项基础的 CRUD 资源是 Create、Read、Update、Delete，
+四种操作，对于一个应用来说我们必须要实现这四种操作，即：
+建立、读取、更新、删除。那么代码如同下面一样： ::
 
     from flask import Flask, request
     from flask_restful import Resource, Api
@@ -63,7 +67,11 @@ like this: ::
 
     todos = {}
 
-    class TodoSimple(Resource):
+    class TodoCURD(Resource):
+        def post(self, todo_id):
+            todos[todo_id] = request.form['data']
+            return {todo_id: todos[todo_id]}
+
         def get(self, todo_id):
             return {todo_id: todos[todo_id]}
 
@@ -71,40 +79,77 @@ like this: ::
             todos[todo_id] = request.form['data']
             return {todo_id: todos[todo_id]}
 
-    api.add_resource(TodoSimple, '/<string:todo_id>')
+        def delete(self, todo_id):
+            try:
+                del todos[todo_id]
+                return 1
+            except KeyError as e:
+                pass
 
-    if __name__ == '__main__':
+    class GetAll(Resource):
+        def get(self):
+            return todos
+
+    api.add_resource(TodoCURD, '/<string:todo_id>')
+    api.add_resource(GetAll, '/')
+
+    if __name__ == "__main__":
         app.run(debug=True)
 
-You can try it like this: ::
+在另一个终端窗口常识如下测试命令： ::
 
-    $ curl http://localhost:5000/todo1 -d "data=Remember the milk" -X PUT
-    {"todo1": "Remember the milk"}
-    $ curl http://localhost:5000/todo1
-    {"todo1": "Remember the milk"}
-    $ curl http://localhost:5000/todo2 -d "data=Change my brakepads" -X PUT
-    {"todo2": "Change my brakepads"}
-    $ curl http://localhost:5000/todo2
-    {"todo2": "Change my brakepads"}
+    $ http://127.0.0.1:5000/create -d "data=C操作的HTTP方法是post，现在实用API来增加数据" -X POST
+    {
+    "create": "C\u64cd\u4f5c\u7684HTTP\u65b9\u6cd5\u662fpost\uff0c\u73b0\u5728\u5b9e\u7528API\u6765\u589e\u52a0\u6570\u636e"
+    }
+    $ curl http://127.0.0.1:5000/create
+    {
+        "create": "C\u64cd\u4f5c\u7684HTTP\u65b9\u6cd5\u662fpost\uff0c\u73b0\u5728\u5b9e\u7528API\u6765\u589e\u52a0\u6570\u636e"
+    }
+    $ curl http://127.0.0.1:5000/update -d "data=U操作的HTTP方法是PUT，现在实用API来更新数据，如果没有数据的话会起到增加数据的效果" -X PUT
+    {
+        "update": "U\u64cd\u4f5c\u7684HTTP\u65b9\u6cd5\u662fPUT\uff0c\u73b0\u5728\u5b9e\u7528API\u6765\u66f4\u65b0\u6570\u636e\uff0c\u5982\u679c\u6ca1\u6709\u6570\u636e\u7684\u8bdd\u4f1a\u8d77\u5230\u589e\u52a0\u6570\u636e\u7684\u6548\u679c"
+    }
+    $ curl http://127.0.0.1:5000/update
+    {
+        "update": "U\u64cd\u4f5c\u7684HTTP\u65b9\u6cd5\u662fPUT\uff0c\u73b0\u5728\u5b9e\u7528API\u6765\u66f4\u65b0\u6570\u636e\uff0c\u5982\u679c\u6ca1\u6709\u6570\u636e\u7684\u8bdd\u4f1a\u8d77\u5230\u589e\u52a0\u6570\u636e\u7684\u6548\u679c"
+    }
+    $ curl http://127.0.0.1:5000
+    {
+    "update": "U\u64cd\u4f5c\u7684HTTP\u65b9\u6cd5\u662fPUT\uff0c\u73b0\u5728\u5b9e\u7528API\u6765\u66f4\u65b0\u6570\u636e\uff0c\u5982\u679c\u6ca1\u6709\u6570\u636e\u7684\u8bdd\u4f1a\u8d77\u5230\u589e\u52a0\u6570\u636e\u7684\u6548\u679c",
+    "create": "C\u64cd\u4f5c\u7684HTTP\u65b9\u6cd5\u662fpost\uff0c\u73b0\u5728\u5b9e\u7528API\u6765\u589e\u52a0\u6570\u636e"
+    }
+    $ curl http://127.0.0.1:5000/create -X DELETE
+    1
+    $ curl http://127.0.0.1:5000
+    {
+        "update": "U\u64cd\u4f5c\u7684HTTP\u65b9\u6cd5\u662fPUT\uff0c\u73b0\u5728\u5b9e\u7528API\u6765\u66f4\u65b0\u6570\u636e\uff0c\u5982\u679c\u6ca1\u6709\u6570\u636e\u7684\u8bdd\u4f1a\u8d77\u5230\u589e\u52a0\u6570\u636e\u7684\u6548\u679c"
+    }
 
 
-Or from python if you have the ``requests`` library installed::
+或者在 Python 里做测试，前提是你已经安装了 ``requests`` 库::
 
-     >>> from requests import put, get
-     >>> put('http://localhost:5000/todo1', data={'data': 'Remember the milk'}).json()
-     {u'todo1': u'Remember the milk'}
-     >>> get('http://localhost:5000/todo1').json()
-     {u'todo1': u'Remember the milk'}
-     >>> put('http://localhost:5000/todo2', data={'data': 'Change my brakepads'}).json()
-     {u'todo2': u'Change my brakepads'}
-     >>> get('http://localhost:5000/todo2').json()
-     {u'todo2': u'Change my brakepads'}
+    >>> from requests import post, get, put, delete
+    >>> post('http://127.0.0.1:5000/create', data={'data': 'C操作的HTTP方法是post，现在使用API来增加数据'}).json()
+    {'create': 'C操作的HTTP方法是post，现在使用API来增加数据'}
+    >>> get('http://127.0.0.1:5000').json()
+    {'create': 'C操作的HTTP方法是post，现在使用API来增加数据'}
+    >>> put('http://127.0.0.1:5000/create', data={'data': 'U操作的HTTP方法是PUT，现在使用API来更新数据，如果没有数据的话会起到增加数据的效果'}).json()
+    {'create': 'U操作的HTTP方法是PUT，现在使用API来更新数据，如果没有数据的话会起到增加数据的效果'}
+    >>> get('http://127.0.0.1:5000').json()
+    {'create': 'U操作的HTTP方法是PUT，现在使用API来更新数据，如果没有数据的话会起到增加数据的效果'}
+    >>> get('http://127.0.0.1:5000/create').json()
+    {'create': 'U操作的HTTP方法是PUT，现在使用API来更新数据，如果没有数据的话会起到增加数据的效果'}
+    >>> delete('http://127.0.0.1:5000/create').json()
+    1
+    >>> get('http://127.0.0.1:5000').json()
+    {}
 
-Flask-RESTful understands multiple kinds of return values from view methods.
-Similar to Flask, you can return any iterable and it will be converted into a
-response, including raw Flask response objects. Flask-RESTful also support
-setting the response code and response headers using multiple return values,
-as shown below: ::
+Flask-RESTful 能够理解多种从视图方法返回的值。
+类似 Flask 一样，你可以返回任何一个可迭代对象，
+迭代对象会转换成一个响应对象，包括生食 Flask 响应对象。
+Flask-RESTful 也支持使用多个返回值配置响应代号和响应头部，
+示例如下： ::
 
     class Todo1(Resource):
         def get(self):
@@ -122,30 +167,31 @@ as shown below: ::
             return {'task': 'Hello world'}, 201, {'Etag': 'some-opaque-string'}
 
 
-Endpoints
+端点
 ---------
 
-Many times in an API, your resource will have multiple URLs. You can pass
-multiple URLs to the :meth:`~Api.add_resource` method on the `Api` object.
-Each one will be routed to your :class:`Resource` ::
+一个 API 多点访问，你的资源可以有多个 URLs 地址。
+这样你可以在 `Api` 实例对象上用
+:meth:`~Api.add_resource` 方法来增加多个地址规则。
+每一条路线都会通往你的 :class:`Resource` 类 ::
 
     api.add_resource(HelloWorld,
         '/',
         '/hello')
 
-You can also match parts of the path as variables to your resource methods. ::
+你也可以用变量形式增加到路线中，匹配符合的用法。 ::
 
     api.add_resource(Todo,
         '/todo/<int:todo_id>', endpoint='todo_ep')
 
 
-Argument Parsing
+参数语法分析
 ----------------
 
-While Flask provides easy access to request data (i.e. querystring or POST
-form encoded data), it's still a pain to validate form data. Flask-RESTful
-has built-in support for request data validation using a library similar to
-`argparse <http://docs.python.org/dev/library/argparse.html>`_. ::
+在 Flask 提供容易访问请求数据的同时（例如，查询字符串或 POST 表单编码过的数据），
+验证表单数据依然是一种痛苦。但 Flask-RESTful 具有内置支持，对请求数据验证来说
+使用了一个类似 `argparse <http://docs.python.org/dev/library/argparse.html>`_
+一样的库，名叫 `reqparse`。完整代码在 `examples/todo.py` 目录中。 ::
 
     from flask_restful import reqparse
 
@@ -155,34 +201,39 @@ has built-in support for request data validation using a library similar to
 
 .. note ::
 
-    Unlike the argparse module, :meth:`reqparse.RequestParser.parse_args`
-    returns a Python dictionary instead of a custom data structure.
+    与 `argparse` 不同，其中 :meth:`reqparse.RequestParser.parse_args`
+    方法返回的是一个 Python 字典数据类型，而不是自定义数据结构。
 
-Using the :class:`reqparse` module also gives you sane error messages for
-free. If an argument fails to pass validation, Flask-RESTful will respond with
-a 400 Bad Request and a response highlighting the error. ::
+使用 :class:`reqparse` 模块中的类可以提供正常的错误消息给你。
+如果一个参数验证失败， Flask-RESTful 会用 400 败坏请求代号
+响应给你，并含有一个响应提醒错误。 ::
 
     $ curl -d 'rate=foo' http://127.0.0.1:5000/todos
-    {'status': 400, 'message': 'foo cannot be converted to int'}
+    {
+        "message": {
+            "rate": "Rate to charge for this resource"
+        }
+    }
 
 
-The :class:`inputs` module provides a number of included common conversion
-functions such as :meth:`inputs.date` and :meth:`inputs.url`.
+其中 :class:`inputs` 模块提供的类具有共性转换功能，
+例如 :meth:`inputs.date` 和 :meth:`inputs.url` 方法。
 
-Calling ``parse_args`` with ``strict=True`` ensures that an error is thrown if
-the request includes arguments your parser does not define. ::
+调用 ``parse_args`` 方法时含有 ``strict=True`` 参数可以
+让请求中的参数不符合你的语法分析器定义时确保抛出一个错误。 ::
 
     args = parser.parse_args(strict=True)
 
-Data Formatting
+数据格式化
 ---------------
 
-By default, all fields in your return iterable will be rendered as-is. While
-this works great when you're just dealing with Python data structures,
-it can become very frustrating when working with objects. To solve this
-problem, Flask-RESTful provides the :class:`fields` module and the
-:meth:`marshal_with` decorator. Similar to the Django ORM and WTForm, you
-use the ``fields`` module to describe the structure of your response. ::
+默认情况，你返回的可迭代对象中的所有区域会进行直译。
+同时，当你处理 Python 数据结构时就有很棒的效果，
+但与对象工作却变得非常麻烦。要解决对象问题，
+Flask-RESTful 提供了 :class:`fields` 模块，
+其中 :meth:`marshal_with` 装饰器方法解决了你的对象烦恼。
+类似 Django ORM 和 WTForm 一样，你使用 ``fields`` 模块
+来描述你的响应对象结构。 ::
 
     from flask_restful import fields, marshal_with
 
@@ -204,18 +255,17 @@ use the ``fields`` module to describe the structure of your response. ::
         def get(self, **kwargs):
             return TodoDao(todo_id='my_todo', task='Remember the milk')
 
-The above example takes a python object and prepares it to be serialized. The
-:meth:`marshal_with` decorator will apply the transformation described by
-``resource_fields``. The only field extracted from the object is ``task``. The
-:class:`fields.Url` field is a special field that takes an endpoint name
-and generates a URL for that endpoint in the response. Many of the field types
-you need are already included. See the :class:`fields` guide for a complete
-list.
+上面的例子是得到一个 Python 对象后准备把这个对象做序列化处理。
+其中 :meth:`marshal_with` 装饰器方法会把 ``resource_fields`` 字典进行变形处理。
+只提取了 ``task`` 区域，而 :class:`fields.Url` 区域是一个特殊区域，
+该特殊区域负责获得一个端点名后为响应对象中的端点生成一个 URL 地址。
+你需要的许多区域类型都已经有了。阅读 :class:`fields` 模块指导内容了解完整清单。
+在 `examples/todo.py` 中也可以找到这种示例代码。
 
-Full Example
+完整的例子
 ------------
 
-Save this example in api.py ::
+把下面代码保持在 `api.py` 文件中 ::
 
     from flask import Flask
     from flask_restful import reqparse, abort, Api, Resource
@@ -281,76 +331,125 @@ Save this example in api.py ::
         app.run(debug=True)
 
 
-Example usage ::
+在终端里运行该示例： ::
 
     $ python api.py
-     * Running on http://127.0.0.1:5000/
-     * Restarting with reloader
+      * Serving Flask app "api" (lazy loading)
+     * Environment: production
+       WARNING: This is a development server. Do not use it in a production deployment.
+       Use a production WSGI server instead.
+     * Debug mode: on
+     * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+     * Restarting with stat
+     * Debugger is active!
+     * Debugger PIN: 261-284-565
 
-GET the list ::
+另一个终端里输入测试 API 命令 ::
 
     $ curl http://localhost:5000/todos
-    {"todo1": {"task": "build an API"}, "todo3": {"task": "profit!"}, "todo2": {"task": "?????"}}
+    {
+        "todo1": {
+            "task": "build an API"
+        },
+        "todo2": {
+            "task": "?????"
+        },
+        "todo3": {
+            "task": "profit!"
+        }
+    }
 
-GET a single task ::
+GET 单项任务命令 ::
 
     $ curl http://localhost:5000/todos/todo3
-    {"task": "profit!"}
+    {
+        "task": "profit!"
+    }
 
-DELETE a task ::
+DELETE 一项任务命令 ::
 
     $ curl http://localhost:5000/todos/todo2 -X DELETE -v
 
+    *   Trying ::1...
+    * TCP_NODELAY set
+    * Connection failed
+    * connect to ::1 port 5000 failed: Connection refused
+    *   Trying 127.0.0.1...
+    * TCP_NODELAY set
+    * Connected to localhost (127.0.0.1) port 5000 (#0)
     > DELETE /todos/todo2 HTTP/1.1
-    > User-Agent: curl/7.19.7 (universal-apple-darwin10.0) libcurl/7.19.7 OpenSSL/0.9.8l zlib/1.2.3
     > Host: localhost:5000
+    > User-Agent: curl/7.54.0
     > Accept: */*
-    >
+    > 
     * HTTP 1.0, assume close after body
     < HTTP/1.0 204 NO CONTENT
     < Content-Type: application/json
-    < Content-Length: 0
-    < Server: Werkzeug/0.8.3 Python/2.7.2
-    < Date: Mon, 01 Oct 2012 22:10:32 GMT
+    < Server: Werkzeug/0.16.0 Python/3.7.4
+    < Date: Tue, 08 Oct 2019 03:46:58 GMT
+    < 
+    * Closing connection 0
 
-Add a new task ::
+再增加一项任务的命令 ::
 
     $ curl http://localhost:5000/todos -d "task=something new" -X POST -v
 
+    Note: Unnecessary use of -X or --request, POST is already inferred.
+    *   Trying ::1...
+    * TCP_NODELAY set
+    * Connection failed
+    * connect to ::1 port 5000 failed: Connection refused
+    *   Trying 127.0.0.1...
+    * TCP_NODELAY set
+    * Connected to localhost (127.0.0.1) port 5000 (#0)
     > POST /todos HTTP/1.1
-    > User-Agent: curl/7.19.7 (universal-apple-darwin10.0) libcurl/7.19.7 OpenSSL/0.9.8l zlib/1.2.3
     > Host: localhost:5000
+    > User-Agent: curl/7.54.0
     > Accept: */*
     > Content-Length: 18
     > Content-Type: application/x-www-form-urlencoded
-    >
+    > 
+    * upload completely sent off: 18 out of 18 bytes
     * HTTP 1.0, assume close after body
     < HTTP/1.0 201 CREATED
     < Content-Type: application/json
-    < Content-Length: 25
-    < Server: Werkzeug/0.8.3 Python/2.7.2
-    < Date: Mon, 01 Oct 2012 22:12:58 GMT
-    <
-    * Closing connection #0
-    {"task": "something new"}
+    < Content-Length: 32
+    < Server: Werkzeug/0.16.0 Python/3.7.4
+    < Date: Tue, 08 Oct 2019 03:49:02 GMT
+    < 
+    {
+        "task": "something new"
+    }
+    * Closing connection 0
 
-Update a task ::
+更新一项任务内容的命令 ::
 
     $ curl http://localhost:5000/todos/todo3 -d "task=something different" -X PUT -v
 
+    *   Trying ::1...
+    * TCP_NODELAY set
+    * Connection failed
+    * connect to ::1 port 5000 failed: Connection refused
+    *   Trying 127.0.0.1...
+    * TCP_NODELAY set
+    * Connected to localhost (127.0.0.1) port 5000 (#0)
     > PUT /todos/todo3 HTTP/1.1
     > Host: localhost:5000
+    > User-Agent: curl/7.54.0
     > Accept: */*
-    > Content-Length: 20
+    > Content-Length: 24
     > Content-Type: application/x-www-form-urlencoded
-    >
+    > 
+    * upload completely sent off: 24 out of 24 bytes
     * HTTP 1.0, assume close after body
     < HTTP/1.0 201 CREATED
     < Content-Type: application/json
-    < Content-Length: 27
-    < Server: Werkzeug/0.8.3 Python/2.7.3
-    < Date: Mon, 01 Oct 2012 22:13:00 GMT
-    <
-    * Closing connection #0
-    {"task": "something different"}
+    < Content-Length: 38
+    < Server: Werkzeug/0.16.0 Python/3.7.4
+    < Date: Tue, 08 Oct 2019 03:50:28 GMT
+    < 
+    {
+        "task": "something different"
+    }
+    * Closing connection 0
 
